@@ -9,42 +9,33 @@
 #define LED_RUN_PIN     GPIO_PIN_6
 #define LED_RUN_TOGGLE  GPIO_WriteReverse(LED_RUN_PORT, LED_RUN_PIN)
 
-//void delay(unsigned int time)
-//{
-//  unsigned int i = 0xffff;
-//  while(time--)
-//  {
-//    i = 0xffff;
-//    while(i--);
-//  }
-//}
+#define PACKET_BUFFER_SIZE 50
 
 void main(void)
-{
-  float distance_cm;
+{  
+  int packet_len;
+  char packet_buff[PACKET_BUFFER_SIZE];
   
   CLK_HSIPrescalerConfig(CLK_PRESCALER_HSIDIV1);
   
   Delay_Init();
   RS485_Init();
   SRF05_Init();
+  SRF05_AutoPoolEnable();
   
   // LED run
   GPIO_Init(LED_RUN_PORT, LED_RUN_PIN, GPIO_MODE_OUT_PP_HIGH_FAST);
   GPIO_WriteHigh(LED_RUN_PORT, LED_RUN_PIN);
-  
+    
   while (1)
   {
-//    RS485_SendStr("Hello world.\n");
     LED_RUN_TOGGLE;
-    
-    distance_cm = SRF05_GetDistance();
-    
-//    RS485_SendStr("\n");
-    RS485_SendChar((char)distance_cm/1 * 10);
-//    RS485_SendStr("cm.\n");
-    
-    Delay(50);
+    packet_len = RS485_Available();
+   if (packet_len > 0)
+   {
+     RS485_GetData(packet_buff, packet_len);
+     
+   }
   }
 }
 

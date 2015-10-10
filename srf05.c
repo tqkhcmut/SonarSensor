@@ -8,8 +8,9 @@
 #define ECHO_PIN        GPIO_PIN_0
 
 __IO unsigned long counter, count_down;
-unsigned long capture_start, capture_stop;
-unsigned char auto_pool = 0;
+__IO unsigned long capture_start, capture_stop;
+__IO float distance = 0.0;
+__IO unsigned char auto_poll = 0;
 
 float DistanceCalculation(unsigned long duration)
 {
@@ -47,53 +48,25 @@ int SRF05_Init(void)
   /* Enable TIM3 */
   TIM3_Cmd(ENABLE);
   
+  EXTI_SetExtIntSensitivity(EXTI_PORT_GPIOD, EXTI_SENSITIVITY_RISE_FALL);
+  
   capture_start = 0;
   capture_stop = 0;
   return 0;
 }
 int SRF05_AutoPoolEnable(void)
 {
-  auto_pool = 1;
+  auto_poll = 1;
   return 0;
 }
 int SRF05_AutoPoolDisable(void)
 {
-  auto_pool = 0;
+  auto_poll = 0;
   return 1;
 }
 float SRF05_GetDistance(void)
 {  
-  if (auto_pool)
-  {
-  }
-  else
-  {
-    GPIO_WriteHigh(TRIGER_PORT, TRIGER_PIN);
-    count_down = 2;
-    while(count_down);
-    GPIO_WriteLow(TRIGER_PORT, TRIGER_PIN);
-    
-    count_down = 3000;
-    while (GPIO_ReadInputPin(ECHO_PORT, ECHO_PIN) == RESET)
-    {
-      if (count_down == 0)
-      {
-        return -1.0;
-      }
-    }
-    capture_start = counter;
-    count_down = 3000;
-    while (GPIO_ReadInputPin(ECHO_PORT, ECHO_PIN) == SET)
-    {
-      if (count_down == 0)
-      {
-        return -1.0;
-      }
-    }
-    capture_stop = counter;
-  }
-  
-  return DistanceCalculation(capture_stop - capture_start);
+  return distance;
 }
 
 /**
@@ -104,8 +77,37 @@ float SRF05_GetDistance(void)
  INTERRUPT_HANDLER(TIM3_UPD_OVF_BRK_IRQHandler, 15)
 {
   counter++;
-  if (count_down)
+  if (auto_poll)
+  {
+    if (count_down == 32)
+    {
+      GPIO_WriteHigh(TRIGER_PORT, TRIGER_PIN);
+    }
+    else if (count_down == 30)
+    {
+      GPIO_WriteLow(TRIGER_PORT, TRIGER_PIN);
+    } 
+    else if (count_down == 0)
+    {
+      count_down = 33;
+    }
     count_down--;
+  }
   /* Cleat Interrupt Pending bit */
   TIM3_ClearITPendingBit(TIM3_IT_UPDATE);
+}
+
+INTERRUPT_HANDLER(EXTI_PORTD_IRQHandler, 6)
+{
+  if (GPIO_ReadInputPin(ECHO_PORT, ECHO_PIN) == SET)
+  {
+    // rising edge
+    capture_start = counter;
+  }
+  else
+  {
+    // falling edge
+    capture_stop = counter;
+    distance = (capture_stop - capture_start) / 5.8;
+  }
 }
