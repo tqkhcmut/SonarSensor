@@ -1759,7 +1759,19 @@
     </file>
   </group>
   <file>
+    <name>$PROJ_DIR$\flash.c</name>
+  </file>
+  <file>
+    <name>$PROJ_DIR$\flash.h</name>
+  </file>
+  <file>
     <name>$PROJ_DIR$\main.c</name>
+  </file>
+  <file>
+    <name>$PROJ_DIR$\packet.c</name>
+  </file>
+  <file>
+    <name>$PROJ_DIR$\packet.h</name>
   </file>
   <file>
     <name>$PROJ_DIR$\stm8s_conf.h</name>
