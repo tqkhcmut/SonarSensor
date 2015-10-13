@@ -21,8 +21,8 @@ void Delay_Init(void)
   /* Enable update interrupt */
   TIM4_ITConfig(TIM4_IT_UPDATE, ENABLE);
   
-  /* enable interrupts */
-  enableInterrupts();
+//  /* enable interrupts */
+//  enableInterrupts();
   
   /* Enable TIM4 */
   TIM4_Cmd(ENABLE);
@@ -45,7 +45,7 @@ INTERRUPT_HANDLER(TIM4_UPD_OVF_IRQHandler, 23)
 
 void Delay(int ms_time)
 {
-  delay_count = ms_time;
+  delay_count = ms_time + 1;
   while(delay_count);
 }
 unsigned int Millis(void)

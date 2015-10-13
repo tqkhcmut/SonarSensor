@@ -1,20 +1,16 @@
 #ifndef _rs485_h_
 #define _rs485_h_
 
-#ifdef __cplusplus
- extern "C" {
-#endif
-
 #include "stm8s.h"
 
 #ifndef BYTE_FORMAT
-typedef enum 
-{
-	BIN = 0,
-	OCT,
-	DEC,
-	HEX
-} BYTE_FORMAT;
+
+#define BIN     0
+#define OCT     1
+#define DEC     2
+#define HEX     3
+typedef unsigned char BYTE_FORMAT;
+
 #endif
 
 void RS485_Init(void);
@@ -26,9 +22,6 @@ void RS485_SendByte(uint8_t b, BYTE_FORMAT f);
 int RS485_Available(void);
 int RS485_GetData(char * buffer, int len);
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif
 

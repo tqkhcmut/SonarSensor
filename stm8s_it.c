@@ -125,17 +125,17 @@ INTERRUPT_HANDLER(EXTI_PORTB_IRQHandler, 4)
   */
 }
 
-/**
-  * @brief  External Interrupt PORTC Interrupt routine
-  * @param  None
-  * @retval None
-  */
-INTERRUPT_HANDLER(EXTI_PORTC_IRQHandler, 5)
-{
-  /* In order to detect unexpected events during development,
-     it is recommended to set a breakpoint on the following instruction.
-  */
-}
+///**
+//  * @brief  External Interrupt PORTC Interrupt routine
+//  * @param  None
+//  * @retval None
+//  */
+//INTERRUPT_HANDLER(EXTI_PORTC_IRQHandler, 5)
+//{
+//  /* In order to detect unexpected events during development,
+//     it is recommended to set a breakpoint on the following instruction.
+//  */
+//}
 
 /**
   * @brief  External Interrupt PORTD Interrupt routine
@@ -327,17 +327,17 @@ INTERRUPT_HANDLER(TIM1_CAP_COM_IRQHandler, 12)
   */
 }
 
-/**
-  * @brief  UART1 RX Interrupt routine
-  * @param  None
-  * @retval None
-  */
- INTERRUPT_HANDLER(UART1_RX_IRQHandler, 18)
-{
-  /* In order to detect unexpected events during development,
-     it is recommended to set a breakpoint on the following instruction.
-  */
-}
+///**
+//  * @brief  UART1 RX Interrupt routine
+//  * @param  None
+//  * @retval None
+//  */
+// INTERRUPT_HANDLER(UART1_RX_IRQHandler, 18)
+//{
+//  /* In order to detect unexpected events during development,
+//     it is recommended to set a breakpoint on the following instruction.
+//  */
+//}
 #endif /*STM8S105*/
 
 /**
