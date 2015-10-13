@@ -25,6 +25,7 @@ void RS485_SendFloat(float num);
 void RS485_SendByte(uint8_t b, BYTE_FORMAT f);
 int RS485_Available(void);
 int RS485_GetData(char * buffer, int len);
+int RS485_SendData(char * buffer, int len);
 
 #ifdef __cplusplus
 }

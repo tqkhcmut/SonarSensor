@@ -79,17 +79,17 @@ float SRF05_GetDistance(void)
   counter++;
   if (auto_poll)
   {
-    if (count_down == 32)
+    if (count_down == 3002)
     {
       GPIO_WriteHigh(TRIGER_PORT, TRIGER_PIN);
     }
-    else if (count_down == 30)
+    else if (count_down == 3000)
     {
       GPIO_WriteLow(TRIGER_PORT, TRIGER_PIN);
     } 
     else if (count_down == 0)
     {
-      count_down = 33;
+      count_down = 3003;
     }
     count_down--;
   }
