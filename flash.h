@@ -3,7 +3,7 @@
 
 struct flash_data
 {
-	unsigned char id;
+  unsigned char id;
 };
 
 int flash_write_buffer(char * buff, int size);
