@@ -1760,12 +1760,6 @@
   </group>
   <group>
     <name>uart</name>
-    <file>
-      <name>$PROJ_DIR$\uart.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\uart.h</name>
-    </file>
   </group>
   <file>
     <name>$PROJ_DIR$\flash.c</name>

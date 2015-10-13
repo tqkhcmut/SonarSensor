@@ -7,7 +7,7 @@
 
 #include "packet.h"
 #include "flash.h"
-#include "uart.h"
+//#include "uart.h"
 
 #include <string.h>
 
@@ -35,7 +35,7 @@ void main(void)
   
   Delay_Init();
   RS485_Init();
-  UART_Init(115200);
+//  UART_Init(115200);
   SRF05_Init();
   SRF05_AutoPoolEnable();
   
@@ -44,7 +44,7 @@ void main(void)
   
   //flash_read_buffer((char *)&my_data, sizeof (struct flash_data));
   my_data.id = 0x21;
-  UART_SendByte(0x21, HEX);
+//  UART_SendByte(0x21, HEX);
   //  RS485_SendStr("Hello world.\n");
   
   // LED run
@@ -64,6 +64,7 @@ void main(void)
     {
       memset(packet_buff, 0, PACKET_BUFFER_SIZE);
       RS485_GetData(packet_buff, packet_len);
+			RS485_Flush(); // this must be call when packet processed
       packet = (struct Packet *)packet_buff;
       switch (packet->cmd)
       {

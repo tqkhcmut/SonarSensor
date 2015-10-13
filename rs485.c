@@ -56,8 +56,11 @@ int RS485_GetData(char * buffer, int len)
   {
     buffer[i] = rs485_rx_buff[i];
   }
-  rs485_rx_len = 0;
   return len;
+}
+void RS485_Flush(void)
+{
+	rs485_rx_len = 0;
 }
 
 void RS485_SendChar(char c)
