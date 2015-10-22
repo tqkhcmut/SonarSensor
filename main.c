@@ -17,24 +17,23 @@
 #define LED_RUN_ON      GPIO_WriteHigh(LED_RUN_PORT, LED_RUN_PIN)
 #define LED_RUN_OFF     GPIO_WriteLow(LED_RUN_PORT, LED_RUN_PIN)
 
-#define PACKET_BUFFER_SIZE 50
+#define PACKET_BUFFER_SIZE 128
 
 struct flash_data my_data;
 float tmp_distance = 0.0;
+//  int packet_len;
+char packet_buff[PACKET_BUFFER_SIZE];
+struct Packet * packet;	
+unsigned int tmp_time;
 
 void main(void)
-{  
-  int packet_len;
-  char packet_buff[PACKET_BUFFER_SIZE];
-  struct Packet * packet;	
-  unsigned int tmp_time = Millis();
-  
+{    
   CLK_HSIPrescalerConfig(CLK_PRESCALER_HSIDIV1);
   
   disableInterrupts();
   
   Delay_Init();
-  RS485_Init();
+  RS485_Init(115200);
 //  UART_Init(115200);
   SRF05_Init();
   SRF05_AutoPoolEnable();
@@ -53,17 +52,16 @@ void main(void)
   
   while (1)
   {
-    if (Millis() - tmp_time > 1000)
+    if (Millis() - tmp_time > 100)
     {
       LED_RUN_TOGGLE;
       tmp_time = Millis();
     }
     
-    packet_len = RS485_Available();
-    if (packet_len > 2)
+    if (RS485_Available() > 3)
     {
       memset(packet_buff, 0, PACKET_BUFFER_SIZE);
-      RS485_GetData(packet_buff, packet_len);
+      RS485_GetData(packet_buff);
 			RS485_Flush(); // this must be call when packet processed
       packet = (struct Packet *)packet_buff;
       switch (packet->cmd)
@@ -77,14 +75,9 @@ void main(void)
           packet->data_type = TYPE_FLOAT | BIG_ENDIAN_BYTE_ORDER;
           memcpy(packet->data, &tmp_distance, getTypeLength(packet->data_type));
           packet->data[getTypeLength(packet->data_type)] = checksum((char *)packet);
-          RS485_SendChar(packet->id);
-          RS485_SendChar(packet->cmd);
-          RS485_SendChar(packet->data_type);
-          RS485_SendChar(packet->data[0]);	// float data byte 1
-          RS485_SendChar(packet->data[1]);	// float data byte 2
-          RS485_SendChar(packet->data[2]);	// float data byte 3
-          RS485_SendChar(packet->data[3]);	// float data byte 4
-          RS485_SendChar(packet->data[4]);	// checksum byte
+          RS485_DIR_OUTPUT;
+          RS485_SendData(packet_buff, 4 + getTypeLength(packet->data_type));
+          RS485_DIR_INPUT;
         }
         else if (IS_BROADCAST_ID(packet->id))
         {

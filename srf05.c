@@ -7,8 +7,8 @@
 #define ECHO_PORT       GPIOC
 #define ECHO_PIN        GPIO_PIN_7
 
-__IO unsigned long counter, count_down;
-__IO unsigned long capture_start, capture_stop;
+__IO unsigned int counter, count_down;
+__IO unsigned int capture_start, capture_stop;
 //__IO float distance = 0.0;
 __IO unsigned char auto_poll = 0;
 
@@ -68,7 +68,7 @@ int SRF05_AutoPoolDisable(void)
 }
 float SRF05_GetDistance(void)
 {  
-  return (capture_stop - capture_start) / 0.58;
+  return (float)(capture_stop - capture_start) / 0.58;
 }
 
 /**

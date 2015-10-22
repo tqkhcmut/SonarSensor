@@ -1,15 +1,10 @@
 #include "rs485.h"
 
-#define RS485_BUFF_SIZE 50
+#define RS485_BUFF_SIZE 128
 __IO unsigned char rs485_rx_buff[RS485_BUFF_SIZE];
 __IO unsigned char rs485_rx_len; 
 
-#define RS485_DIR_PORT          GPIOD
-#define RS485_DIR_PIN           GPIO_PIN_3
-#define RS485_DIR_INPUT         GPIO_WriteLow(RS485_DIR_PORT, RS485_DIR_PIN)
-#define RS485_DIR_OUTPUT        GPIO_WriteHigh(RS485_DIR_PORT, RS485_DIR_PIN)
-
-void RS485_Init(void)
+void RS485_Init(unsigned long baudrate)
 {
   GPIO_Init(RS485_DIR_PORT, RS485_DIR_PIN, GPIO_MODE_OUT_PP_HIGH_FAST);
   RS485_DIR_INPUT;
@@ -19,15 +14,14 @@ void RS485_Init(void)
   
   
   /* Configure the UART3 */
-  UART3_Init((uint32_t)115200, UART3_WORDLENGTH_8D, UART3_STOPBITS_1, UART3_PARITY_NO,
+  UART3_Init((uint32_t)baudrate, UART3_WORDLENGTH_8D, UART3_STOPBITS_1, UART3_PARITY_NO,
              UART3_MODE_TXRX_ENABLE);
   
   /* Enable UART3 Receive interrupt */
   UART3_ITConfig(UART3_IT_RXNE_OR, ENABLE);
   
-//  /* Enable general interrupts */
-//  enableInterrupts();    
-  
+  /* Enable general interrupts */
+  enableInterrupts();    
 }
 
 INTERRUPT_HANDLER(UART3_RX_IRQHandler, 21)
@@ -47,43 +41,48 @@ int RS485_Available(void)
 {
   return rs485_rx_len;
 }
-int RS485_GetData(char * buffer, int len)
+int RS485_GetData(char * buffer)
 {
 //  memcpy((void *)buffer, (void const *)rs485_rx_buff, len);
 //  memset((void *)rs485_rx_buff, 0, RS485_BUFF_SIZE);
   int i;
-  for (i = 0; i < len; i++)
+  for (i = 0; i < rs485_rx_len; i++)
   {
     buffer[i] = rs485_rx_buff[i];
   }
-  return len;
+  rs485_rx_len = 0;
+  return i;
 }
+
+int RS485_SendData(char * buffer, int len)
+{
+  int i;
+  for (i = 0; i < len; i++)
+  {
+    UART3_SendData8(buffer[i]);
+    while (UART3_GetFlagStatus(UART3_FLAG_TXE) == RESET);
+  }
+  return i;
+}
+
 void RS485_Flush(void)
 {
 	rs485_rx_len = 0;
 }
 
 void RS485_SendChar(char c)
-{
-  RS485_DIR_OUTPUT;
-  
+{  
   UART3_SendData8(c);
   while (UART3_GetFlagStatus(UART3_FLAG_TXE) == RESET);
-  
-  RS485_DIR_INPUT;
 }
 
 void RS485_SendStr(char Str[])
-{
-  RS485_DIR_OUTPUT;
-  
+{  
   while(*Str)
   {
     UART3_SendData8(*Str++);
     while (UART3_GetFlagStatus(UART3_FLAG_TXE) == RESET);
   }
-  
-  RS485_DIR_INPUT;
 }
 
 void RS485_SendNum(int num)
