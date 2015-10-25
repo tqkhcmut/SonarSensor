@@ -46,11 +46,12 @@ int RS485_GetData(char * buffer)
 //  memcpy((void *)buffer, (void const *)rs485_rx_buff, len);
 //  memset((void *)rs485_rx_buff, 0, RS485_BUFF_SIZE);
   int i;
+  disableInterrupts();
   for (i = 0; i < rs485_rx_len; i++)
   {
     buffer[i] = rs485_rx_buff[i];
   }
-  rs485_rx_len = 0;
+	enableInterrupts();
   return i;
 }
 

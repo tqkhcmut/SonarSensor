@@ -23,6 +23,7 @@ struct flash_data my_data;
 float tmp_distance = 0.0;
 //  int packet_len;
 char packet_buff[PACKET_BUFFER_SIZE];
+unsigned char packet_len;
 struct Packet * packet;	
 unsigned int tmp_time;
 
@@ -30,12 +31,12 @@ unsigned int tmp_time;
 void main(void)
 {    
   CLK_HSIPrescalerConfig(CLK_PRESCALER_HSIDIV1);
-  
-  disableInterrupts();
-  
+   
   Delay_Init();
   RS485_Init(115200);
+#if DEBUG
 //  UART_Init(115200);
+#endif
   SRF05_Init();
   SRF05_AutoPoolEnable();
   
@@ -50,7 +51,7 @@ void main(void)
   
   while (1)
   {
-    if (Millis() - tmp_time > 100)
+    if (Millis() - tmp_time > 500)
     {
       LED_RUN_TOGGLE;
       tmp_time = Millis();
@@ -63,43 +64,52 @@ void main(void)
 #endif
     }
     
-    if (RS485_Available() > 3)
+    if (RS485_Available() >= 8)
     {
-      memset(packet_buff, 0, PACKET_BUFFER_SIZE);
-      RS485_GetData(packet_buff);
-			RS485_Flush(); // this must be call when packet processed
+//      memset(packet_buff, 0, PACKET_BUFFER_SIZE);
+      packet_len = RS485_GetData(packet_buff);
       packet = (struct Packet *)packet_buff;
-      switch (packet->cmd)
-      {
-      case CMD_QUERY:
-        if (packet->id == my_data.id)
-        {
-          LED_RUN_TOGGLE;
-          
-          tmp_distance = SRF05_GetDistance();
-          packet->data_type = TYPE_FLOAT | BIG_ENDIAN_BYTE_ORDER;
-          memcpy(packet->data, &tmp_distance, getTypeLength(packet->data_type));
-          packet->data[getTypeLength(packet->data_type)] = checksum((char *)packet);
-          RS485_DIR_OUTPUT;
-          RS485_SendData(packet_buff, 4 + getTypeLength(packet->data_type));
-          RS485_DIR_INPUT;
-        }
-        else if (IS_BROADCAST_ID(packet->id))
-        {
-          LED_RUN_ON;
-          // this is for future mode, used to setting id
-          // not implemetation jet
-        }
-        else
-        {
-          // not own id
-        }
-        break;
-      case CMD_CONTROL:
-        break;
-      default:
-        break;
-      }
+			if (packet_len < 4 + getTypeLength(packet->data_type))
+			{
+				// not enough length
+			}
+			else
+			{
+				switch (packet->cmd)
+				{
+				case CMD_QUERY:
+					if (packet->id == my_data.id)
+					{
+						LED_RUN_TOGGLE;
+						
+						tmp_distance = SRF05_GetDistance();
+						packet->data_type = TYPE_FLOAT | BIG_ENDIAN_BYTE_ORDER;
+						memcpy(packet->data, &tmp_distance, getTypeLength(packet->data_type));
+						packet->data[getTypeLength(packet->data_type)] = checksum((char *)packet);
+						RS485_DIR_OUTPUT;
+						RS485_SendData(packet_buff, 4 + getTypeLength(packet->data_type));
+						RS485_DIR_INPUT;
+					}
+					else if (IS_BROADCAST_ID(packet->id))
+					{
+						LED_RUN_ON;
+						// this is for future mode, used to setting id
+						// not implemetation jet
+						
+					}
+					else
+					{
+						// not own id
+					}
+					break;
+				case CMD_CONTROL:
+					break;
+				default:
+					break;
+				}
+				
+				RS485_Flush();
+			}
     }
 		
 		SRF05_ProcessTrigger();

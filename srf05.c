@@ -9,8 +9,7 @@
 
 //__IO unsigned int counter, count_down;
 __IO unsigned int capture_time;
-__IO float srf_distance = 0.0;
-__IO unsigned char auto_poll = 0, man_conv_flag = 0, trigger_flag = 0;
+__IO unsigned char auto_poll = 0, man_conv_flag = 0, trigger_flag = 0, srf_timeout = 0;
 
 int SRF05_Init(void)
 {
@@ -71,7 +70,7 @@ float SRF05_GetDistance(void)
 		GPIO_WriteLow(TRIGGER_PORT, TRIGGER_PIN);
 		while(man_conv_flag == 1);
 	}
-  return srf_distance;
+  return (float)capture_time / (float)58;
 }
 
 void SRF05_ProcessTrigger(void)
@@ -92,14 +91,14 @@ void SRF05_ProcessTrigger(void)
   */
  INTERRUPT_HANDLER(TIM3_UPD_OVF_BRK_IRQHandler, 15)
 {
-	if (capture_time == 0)
-	{
-		srf_distance = (float)-1;
-	}
-	else
-	{
-		srf_distance = (float)capture_time / (float)58;
-	}
+//	if (capture_time == 0)
+//	{
+//		srf_timeout = 1;
+//	}
+//	else
+//	{
+//		srf_timeout = 0;
+//	}
 	if (auto_poll == 1)
 	{
 		// active trigger for new calculation
