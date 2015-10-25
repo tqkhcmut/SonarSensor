@@ -26,6 +26,7 @@ char packet_buff[PACKET_BUFFER_SIZE];
 struct Packet * packet;	
 unsigned int tmp_time;
 
+#define DEBUG 	0	// turn on debug mode
 void main(void)
 {    
   CLK_HSIPrescalerConfig(CLK_PRESCALER_HSIDIV1);
@@ -37,9 +38,6 @@ void main(void)
 //  UART_Init(115200);
   SRF05_Init();
   SRF05_AutoPoolEnable();
-  
-  /* Enable general interrupts */
-  enableInterrupts();  
   
   //flash_read_buffer((char *)&my_data, sizeof (struct flash_data));
   my_data.id = 0x21;
@@ -56,6 +54,13 @@ void main(void)
     {
       LED_RUN_TOGGLE;
       tmp_time = Millis();
+			
+#if DEBUG
+			RS485_DIR_OUTPUT;
+			RS485_SendStr("\n");
+			RS485_SendFloat(SRF05_GetDistance());
+			RS485_DIR_INPUT;
+#endif
     }
     
     if (RS485_Available() > 3)
@@ -96,6 +101,8 @@ void main(void)
         break;
       }
     }
+		
+		SRF05_ProcessTrigger();
   }
 }
 

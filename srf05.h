@@ -7,5 +7,6 @@ int SRF05_Init(void);
 int SRF05_AutoPoolEnable(void);
 int SRF05_AutoPoolDisable(void);
 float SRF05_GetDistance(void);
+void SRF05_ProcessTrigger(void);
 
 #endif
