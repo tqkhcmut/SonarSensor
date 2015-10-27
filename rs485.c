@@ -6,6 +6,7 @@ __IO unsigned char rs485_rx_len;
 
 void RS485_Init(unsigned long baudrate)
 {
+  GPIO_Init(RS485_SEL_PORT, RS485_SEL_PIN, GPIO_MODE_IN_FL_NO_IT);
   GPIO_Init(RS485_DIR_PORT, RS485_DIR_PIN, GPIO_MODE_OUT_PP_HIGH_FAST);
   RS485_DIR_INPUT;
   

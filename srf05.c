@@ -2,10 +2,14 @@
 #include "delay.h"
 #include "rs485.h"
 
-#define TRIGGER_PORT     GPIOC
-#define TRIGGER_PIN      GPIO_PIN_6
-#define ECHO_PORT       GPIOC
-#define ECHO_PIN        GPIO_PIN_7
+#define TRIGGER_PORT            GPIOC
+#define TRIGGER_PIN             GPIO_PIN_6
+#define ECHO_RAISING_PORT       GPIOC
+#define ECHO_RAISING_EXTI_PORT  EXTI_PORT_GPIOC
+#define ECHO_RAISING_PIN        GPIO_PIN_7
+#define ECHO_FAILING_PORT       GPIOD
+#define ECHO_FAILING_EXTI_PORT  EXTI_PORT_GPIOD
+#define ECHO_FAILING_PIN        GPIO_PIN_0
 
 //__IO unsigned int counter, count_down;
 __IO unsigned int capture_time;
@@ -37,9 +41,13 @@ int SRF05_Init(void)
   
 	// config external gpio interrupt
   disableInterrupts();
-  EXTI_SetExtIntSensitivity(EXTI_PORT_GPIOC, EXTI_SENSITIVITY_RISE_FALL);
-  while (EXTI_GetExtIntSensitivity(EXTI_PORT_GPIOC) != EXTI_SENSITIVITY_RISE_FALL);
-  GPIO_Init(ECHO_PORT, ECHO_PIN, GPIO_MODE_IN_FL_IT);
+  EXTI_SetExtIntSensitivity(ECHO_RAISING_EXTI_PORT, EXTI_SENSITIVITY_RISE_ONLY);
+  while (EXTI_GetExtIntSensitivity(ECHO_RAISING_EXTI_PORT) != EXTI_SENSITIVITY_RISE_ONLY);
+  GPIO_Init(ECHO_RAISING_PORT, ECHO_RAISING_PIN, GPIO_MODE_IN_FL_IT);
+  
+  EXTI_SetExtIntSensitivity(ECHO_FAILING_EXTI_PORT, EXTI_SENSITIVITY_FALL_ONLY);
+  while (EXTI_GetExtIntSensitivity(ECHO_FAILING_EXTI_PORT) != EXTI_SENSITIVITY_FALL_ONLY);
+  GPIO_Init(ECHO_FAILING_PORT, ECHO_FAILING_PIN, GPIO_MODE_IN_FL_IT);
   /* enable interrupts */
   enableInterrupts();
   
@@ -112,36 +120,22 @@ void SRF05_ProcessTrigger(void)
   /* Cleat Interrupt Pending bit */
   TIM3_ClearITPendingBit(TIM3_IT_UPDATE);
 }
-
+// failing
 INTERRUPT_HANDLER(EXTI_PORTD_IRQHandler, 6)
 {
-  if (GPIO_ReadInputPin(ECHO_PORT, ECHO_PIN) == SET)
-  {
-    // rising edge
-    TIM3_SetCounter(0);
-  }
-  else if (GPIO_ReadInputPin(ECHO_PORT, ECHO_PIN) == RESET)
-  {
-    // falling edge
+//  if (GPIO_ReadInputPin(ECHO_FAILING_PORT, ECHO_FAILING_PIN) == RESET)
+//  {
+//    // falling edge
 		capture_time = TIM3_GetCounter();
-  }
+//  }
 }
 
-/**
-  * @brief  External Interrupt PORTC Interrupt routine
-  * @param  None
-  * @retval None
-  */
+// raising
 INTERRUPT_HANDLER(EXTI_PORTC_IRQHandler, 5)
 {
-  if (GPIO_ReadInputPin(ECHO_PORT, ECHO_PIN) == SET)
-  {
-    // rising edge
+//  if (GPIO_ReadInputPin(ECHO_RAISING_PORT, ECHO_RAISING_PIN) == SET)
+//  {
+//    // rising edge
     TIM3_SetCounter(0);
-  }
-  else if (GPIO_ReadInputPin(ECHO_PORT, ECHO_PIN) == RESET)
-  {
-    // falling edge
-		capture_time = TIM3_GetCounter();
-  }
+//  }
 }

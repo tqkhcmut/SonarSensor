@@ -92,15 +92,24 @@ void main(void)
 					}
 					else if (IS_BROADCAST_ID(packet->id))
 					{
-						LED_RUN_ON;
-						// this is for future mode, used to setting id
-						// not implemetation jet
-						
+            if (GPIO_ReadInputPin(RS485_SEL_PORT, RS485_SEL_PIN) == RESET)
+            {
+              LED_RUN_TOGGLE;
+              
+              packet->id = my_data.id;
+              tmp_distance = SRF05_GetDistance();
+              packet->data_type = TYPE_FLOAT | BIG_ENDIAN_BYTE_ORDER;
+              memcpy(packet->data, &tmp_distance, getTypeLength(packet->data_type));
+              packet->data[getTypeLength(packet->data_type)] = checksum((char *)packet);
+              RS485_DIR_OUTPUT;
+              RS485_SendData(packet_buff, 4 + getTypeLength(packet->data_type));
+              RS485_DIR_INPUT;
+            }
 					}
-					else
-					{
+          else
+          {
 						// not own id
-					}
+          }
 					break;
 				case CMD_CONTROL:
 					break;
