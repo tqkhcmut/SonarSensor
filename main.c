@@ -31,18 +31,18 @@ unsigned int tmp_time;
 void main(void)
 {    
   CLK_HSIPrescalerConfig(CLK_PRESCALER_HSIDIV1);
-   
+  
   Delay_Init();
   RS485_Init(115200);
 #if DEBUG
-//  UART_Init(115200);
+  //  UART_Init(115200);
 #endif
   SRF05_Init();
   SRF05_AutoPoolEnable();
   
   //flash_read_buffer((char *)&my_data, sizeof (struct flash_data));
   my_data.id = 0x21;
-//  UART_SendByte(0x21, HEX);
+  //  UART_SendByte(0x21, HEX);
   //  RS485_SendStr("Hello world.\n");
   
   // LED run
@@ -64,36 +64,38 @@ void main(void)
 #endif
     }
     
-    if (RS485_Available() >= 8)
+    if (GPIO_ReadInputPin(RS485_SEL_PORT, RS485_SEL_PIN) == RESET)
     {
-//      memset(packet_buff, 0, PACKET_BUFFER_SIZE);
-      packet_len = RS485_GetData(packet_buff);
-      packet = (struct Packet *)packet_buff;
-			if (packet_len < 4 + getTypeLength(packet->data_type))
-			{
-				// not enough length
-			}
-			else
-			{
-				switch (packet->cmd)
-				{
-				case CMD_QUERY:
-					if (packet->id == my_data.id)
-					{
-						LED_RUN_TOGGLE;
-						
-						tmp_distance = SRF05_GetDistance();
-						packet->data_type = TYPE_FLOAT | BIG_ENDIAN_BYTE_ORDER;
-						memcpy(packet->data, &tmp_distance, getTypeLength(packet->data_type));
-						packet->data[getTypeLength(packet->data_type)] = checksum((char *)packet);
-						RS485_DIR_OUTPUT;
-						RS485_SendData(packet_buff, 4 + getTypeLength(packet->data_type));
-						RS485_DIR_INPUT;
-					}
-					else if (IS_BROADCAST_ID(packet->id))
-					{
-            if (GPIO_ReadInputPin(RS485_SEL_PORT, RS485_SEL_PIN) == RESET)
+      if (RS485_Available() >= 8)
+      {
+        //      memset(packet_buff, 0, PACKET_BUFFER_SIZE);
+        packet_len = RS485_GetData(packet_buff);
+        packet = (struct Packet *)packet_buff;
+        if (packet_len < 4 + getTypeLength(packet->data_type))
+        {
+          // not enough length
+        }
+        else
+        {
+          switch (packet->cmd)
+          {
+          case CMD_QUERY:
+            if (packet->id == my_data.id)
             {
+              LED_RUN_TOGGLE;
+              
+              tmp_distance = SRF05_GetDistance();
+              packet->data_type = TYPE_FLOAT | BIG_ENDIAN_BYTE_ORDER;
+              memcpy(packet->data, &tmp_distance, getTypeLength(packet->data_type));
+              packet->data[getTypeLength(packet->data_type)] = checksum((char *)packet);
+              RS485_DIR_OUTPUT;
+              RS485_SendData(packet_buff, 4 + getTypeLength(packet->data_type));
+              RS485_DIR_INPUT;
+            }
+            else if (IS_BROADCAST_ID(packet->id))
+            {
+              //              if (GPIO_ReadInputPin(RS485_SEL_PORT, RS485_SEL_PIN) == RESET)
+              //              {
               LED_RUN_TOGGLE;
               
               packet->id = my_data.id;
@@ -104,21 +106,36 @@ void main(void)
               RS485_DIR_OUTPUT;
               RS485_SendData(packet_buff, 4 + getTypeLength(packet->data_type));
               RS485_DIR_INPUT;
+              //              }
             }
-					}
-          else
-          {
-						// not own id
+            else
+            {
+              // not own id
+            }
+            break;
+          case CMD_CONTROL:
+            // by default, this mode used only for setting id
+            // the id stored on the first bytes of data bytes
+            if (IS_BROADCAST_ID(packet->id))
+            {
+              LED_RUN_TOGGLE;
+              if (IS_SENSOR_ULTRA_SONIC(packet->data[0]))
+              {
+                my_data.id = packet->data[0];
+              }
+            }
+            break;
+          default:
+            break;
           }
-					break;
-				case CMD_CONTROL:
-					break;
-				default:
-					break;
-				}
-				
-				RS485_Flush();
-			}
+          
+          RS485_Flush();
+        }
+      }
+    }
+    else
+    {
+      RS485_Flush();
     }
 		
 		SRF05_ProcessTrigger();
